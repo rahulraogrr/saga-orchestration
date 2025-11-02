@@ -1,0 +1,15 @@
+# HTTP API settings
+http.host: "0.0.0.0"
+http.port: 9600
+
+# Disable X-Pack monitoring (not needed for local development)
+xpack.monitoring.enabled: false
+
+# Pipeline settings
+path.config: /usr/share/logstash/pipeline
+config.reload.automatic: true
+config.reload.interval: 3s
+
+# Log settings
+log.level: info
+path.logs: /usr/share/logstash/logs

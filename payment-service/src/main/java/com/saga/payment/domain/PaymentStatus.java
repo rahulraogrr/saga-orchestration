@@ -1,0 +1,8 @@
+package com.saga.payment.domain;
+
+public enum PaymentStatus {
+    PENDING,
+    COMPLETED,
+    FAILED,
+    REFUNDED
+}

@@ -1,0 +1,16 @@
+package com.saga.order.dto;
+
+public enum OrderStatus {
+    CREATED,
+    PAYMENT_PENDING,
+    PAYMENT_COMPLETED,
+    PAYMENT_FAILED,
+    KITCHEN_PENDING,
+    KITCHEN_COMPLETED,
+    KITCHEN_FAILED,
+    DELIVERY_PENDING,
+    DELIVERY_ASSIGNED,
+    DELIVERY_FAILED,
+    COMPLETED,
+    CANCELLED
+}

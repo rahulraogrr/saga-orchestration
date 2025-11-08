@@ -13,30 +13,30 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Delivery {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-    
+
     @Column(nullable = false, unique = true)
     private String orderId;
-    
+
     @Column(nullable = false)
     private String deliveryAddress;
-    
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private DeliveryStatus status;
-    
+
     @Column(nullable = false)
     private LocalDateTime receivedAt;
-    
+
     private LocalDateTime assignedAt;
-    
+
     private String driverId;
-    
+
     private String failureReason;
-    
+
     @PrePersist
     public void prePersist() {
         this.receivedAt = LocalDateTime.now();

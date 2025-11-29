@@ -9,10 +9,11 @@ import com.saga.order.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Objects;
 import java.util.Optional;
 
 //THE ORCHESTRATOR
@@ -22,7 +23,6 @@ import java.util.Optional;
 public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
-    private final RabbitTemplate rabbitTemplate;
     private final OrderHelper orderHelper;
 
     @Override
@@ -51,6 +51,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Optional<Order> getOrder(String orderId) {
+        Objects.requireNonNull(orderId, "Order ID must not be null");
         log.info("Fetching order with ID: {}", orderId);
         return orderRepository.findById(orderId);
     }
@@ -67,8 +68,7 @@ public class OrderServiceImpl implements OrderService {
     public void handlePaymentProcessed(PaymentProcessedEvent event) {
         log.info("<<< Received PaymentProcessedEvent: {}", event);
 
-        Order order = orderRepository.findById(event.getOrderId())
-                .orElseThrow(() -> new RuntimeException("Order not found: " + event.getOrderId()));
+        Order order = getOrderOrThrow(Objects.requireNonNull(event.getOrderId()));
 
         order.setStatus(OrderStatus.PAYMENT_COMPLETED);
         order.setPaymentTransactionId(event.getTransactionId());
@@ -86,8 +86,7 @@ public class OrderServiceImpl implements OrderService {
     public void handlePaymentFailed(PaymentFailedEvent event) {
         log.error("<<< Received PaymentFailedEvent: {}", event);
 
-        Order order = orderRepository.findById(event.getOrderId())
-                .orElseThrow(() -> new RuntimeException("Order not found: " + event.getOrderId()));
+        Order order = getOrderOrThrow(Objects.requireNonNull(event.getOrderId()));
 
         order.setStatus(OrderStatus.PAYMENT_FAILED);
         orderRepository.save(order);
@@ -110,8 +109,7 @@ public class OrderServiceImpl implements OrderService {
     public void handlePizzaPrepared(PizzaPreparedEvent event) {
         log.info("<<< Received PizzaPreparedEvent: {}", event);
 
-        Order order = orderRepository.findById(event.getOrderId())
-                .orElseThrow(() -> new RuntimeException("Order not found: " + event.getOrderId()));
+        Order order = getOrderOrThrow(Objects.requireNonNull(event.getOrderId()));
 
         order.setStatus(OrderStatus.KITCHEN_COMPLETED);
         order.setKitchenId(event.getKitchenId());
@@ -129,8 +127,7 @@ public class OrderServiceImpl implements OrderService {
     public void handleKitchenFailed(KitchenFailedEvent event) {
         log.error("<<< Received KitchenFailedEvent: {}", event);
 
-        Order order = orderRepository.findById(event.getOrderId())
-                .orElseThrow(() -> new RuntimeException("Order not found: " + event.getOrderId()));
+        Order order = getOrderOrThrow(Objects.requireNonNull(event.getOrderId()));
 
         order.setStatus(OrderStatus.KITCHEN_FAILED);
         orderRepository.save(order);
@@ -148,8 +145,7 @@ public class OrderServiceImpl implements OrderService {
     public void handleDeliveryAssigned(DeliveryAssignedEvent event) {
         log.info("<<< Received DeliveryAssignedEvent: {}", event);
 
-        Order order = orderRepository.findById(event.getOrderId())
-                .orElseThrow(() -> new RuntimeException("Order not found: " + event.getOrderId()));
+        Order order = getOrderOrThrow(Objects.requireNonNull(event.getOrderId()));
 
         order.setStatus(OrderStatus.COMPLETED);
         order.setDriverId(event.getDriverId());
@@ -164,8 +160,7 @@ public class OrderServiceImpl implements OrderService {
     public void handleDeliveryFailed(DeliveryFailedEvent event) {
         log.error("<<< Received DeliveryFailedEvent: {}", event);
 
-        Order order = orderRepository.findById(event.getOrderId())
-                .orElseThrow(() -> new RuntimeException("Order not found: " + event.getOrderId()));
+        Order order = getOrderOrThrow(Objects.requireNonNull(event.getOrderId()));
 
         order.setStatus(OrderStatus.DELIVERY_FAILED);
         orderRepository.save(order);
@@ -175,6 +170,11 @@ public class OrderServiceImpl implements OrderService {
 
         // COMPENSATE: Refund the payment
         orderHelper.compensatePayment(order, event.getReason());
+    }
+
+    private Order getOrderOrThrow(@NonNull String orderId) {
+        return orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found: " + orderId));
     }
 
 }
